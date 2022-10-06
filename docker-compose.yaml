@@ -1,0 +1,54 @@
+version: '3.9'
+
+services:
+  telegraf-collector:
+    build:
+      context: ./telegraf
+      args:
+        APP_VERSION: "1.24.2_linux_amd64"
+    container_name: telegraf-collector
+    hostname: telegraf-collector
+    volumes:
+      - ${PWD}/files/telegraf-collector/telegraf.conf:/app/telegraf.conf:ro
+  telegraf-gateway:
+    build:
+      context: ./telegraf
+      args:
+        APP_VERSION: "1.24.2_linux_amd64"
+    container_name: telegraf-gateway
+    hostname: telegraf-gateway
+    volumes:
+      - ${PWD}/files/telegraf-gateway/telegraf.conf:/app/telegraf.conf:ro
+  console:
+    build:
+      context: ./console
+    container_name: console
+    hostname: console
+    ports:
+      - "8080:8080"
+    restart: always
+    volumes:
+      - ${PWD}/console/files/config.yaml:/app/config.yaml:ro
+  redpanda:
+    build:
+      context: ./redpanda
+    container_name: redpanda
+    hostname: redpanda
+    command:
+      - redpanda
+      - start
+      - --smp
+      - '1'
+      - --reserve-memory
+      - 0M
+      - --overprovisioned
+      - --node-id
+      - '0'
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092,OUTSIDE://0.0.0.0:29092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092,OUTSIDE://localhost:29092
+      - --pandaproxy-addr
+      - PLAINTEXT://0.0.0.0:8082,OUTSIDE://0.0.0.0:28082
+      - --advertise-pandaproxy-addr
+      - PLAINTEXT://redpanda:8082,OUTSIDE://localhost:82082
