@@ -1,33 +1,30 @@
 FROM ubuntu:focal
 
-ARG APP_USER="telegraf"
+ARG APP_USER="influxd"
 ARG APP_UID="1000"
-ARG APP_GROUP="telegraf"
+ARG APP_GROUP="influxd"
 ARG APP_GID="1000"
 ARG APP_DIR="/app"
 ARG APP_VERSION
 
-ENV PATH="${PATH}:${APP_DIR}"
+ENV PATH="${PATH}:${APP_DIR}/bin"
 
 RUN groupadd -g "${APP_GID}" "${APP_GROUP}" && \
     useradd -u "${APP_UID}" -g "${APP_GID}" -d "${APP_DIR}" -m "${APP_USER}"
 
 RUN apt-get update && \
-    apt-get install wget -y
+    apt-get install wget curl -y
 
 WORKDIR /tmp
 
-RUN wget "https://dl.influxdata.com/telegraf/releases/telegraf-${APP_VERSION}.tar.gz" -O telegraf.tar.gz && \
-    tar -xvf telegraf.tar.gz --strip-components=2 -C "${APP_DIR}"
+RUN wget https://dl.influxdata.com/influxdb/releases/influxdb2-client-${APP_VERSION}.tar.gz  -O client.tar.gz && \
+    tar -xvf client.tar.gz --strip-components=1 -C "${APP_DIR}"
 
 WORKDIR "${APP_DIR}"
 
-RUN rm -rf etc/logrotate.d && \
-    rm -rf var && \
-    mv etc/telegraf/* . && \
-    rm -rf etc && \
-    mv usr/bin/telegraf . && \
-    rm -rf usr
+RUN rm -f README.md LICENSE && \
+    mkdir bin && \
+    mv influx bin/
 
 RUN chown -R "${APP_USER}":"${APP_GROUP}" "${APP_DIR}"
 
